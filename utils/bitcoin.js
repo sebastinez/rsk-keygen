@@ -1,8 +1,8 @@
-var bitcoin = require('bitcoin');
-var bitcoinLib = require('bitcoinjs-lib');
+var bitcoin = require("bitcoin");
+var bitcoinLib = require("bitcoinjs-lib");
 
 var client;
-var network = bitcoinLib.networks.testnet; 
+var network = bitcoinLib.networks.testnet;
 var txVersion = 1;
 var fee = 0.001;
 
@@ -20,31 +20,29 @@ function setNetwork(testnet) {
 }
 
 function transferBtcToSbtc(address, privateKey, value) {
-  if(client == null){
-    console.log('You need to init the bitcoin client to use this method.')
+  if (client == null) {
+    console.log("You need to init the bitcoin client to use this method.");
   }
 
-  client.importAddress(address, function (err, response, headers) {
+  client.importAddress(address, function(err, response, headers) {
+    if (err) return console.log(err);
+    client.listUnspent(0, function(err, utxos, headers) {
       if (err) return console.log(err);
-      client.listUnspent(0, function (err, utxos, headers) {
-          if (err) return console.log(err);
 
-          var utxosByAddress = getUTXOsByAddress(utxos, [address]);
-          var txb = buildTransaction(address, utxosByAddress, value);
-          var signedTx = signTx(txb, privateKey);
+      var utxosByAddress = getUTXOsByAddress(utxos, [address]);
+      var txb = buildTransaction(address, utxosByAddress, value);
+      var signedTx = signTx(txb, privateKey);
 
-          client.sendRawTransaction(signedTx, function (err, response, resHeaders) {
-              if (err) return console.log(err);
-              return response;
-          });
+      client.sendRawTransaction(signedTx, function(err, response, resHeaders) {
+        if (err) return console.log(err);
+        return response;
       });
+    });
   });
 }
 
 function getUTXOsByAddress(utxos, addresses) {
-  return utxos.filter(utxo =>
-      addresses.includes(utxo.address) &&
-      utxo.confirmations >= 1); // TODO 1?
+  return utxos.filter(utxo => addresses.includes(utxo.address) && utxo.confirmations >= 1); // TODO 1?
 }
 
 function btcToSatoshi(amount) {
@@ -59,9 +57,9 @@ function buildTransaction(address, utxos, amount) {
   let input_amount = 0;
   let i = 0;
   while (i < utxos.length && input_amount < amount + fee) {
-      txb.addInput(utxos[i].txid, utxos[i].vout);
-      input_amount += utxos[i].amount;
-      i++;
+    txb.addInput(utxos[i].txid, utxos[i].vout);
+    input_amount += utxos[i].amount;
+    i++;
   }
 
   var change = input_amount - amount - fee;
@@ -70,8 +68,7 @@ function buildTransaction(address, utxos, amount) {
   //TODO: call bridge
   var FEDERATION_ADDRESS = "2N5muMepJizJE1gR7FbHJU6CD18V3BpNF9p";
 
-  if (change <= 0)
-    return console.log('Error in fee.');
+  if (change <= 0) return console.log("Error in fee.");
 
   txb.addOutput(FEDERATION_ADDRESS, btcToSatoshi(amount));
   txb.addOutput(address, btcToSatoshi(change));
@@ -85,10 +82,10 @@ function signTx(tx, privateKey) {
 }
 
 module.exports = {
-  initBitcoinClient : initBitcoinClient,
-  setNetwork : setNetwork,
-  transferBtcToSbtc : transferBtcToSbtc,
-  btcToSatoshi : btcToSatoshi,
-  signTx : signTx,
-  getUTXOsByAddress : getUTXOsByAddress
-}
+  initBitcoinClient: initBitcoinClient,
+  setNetwork: setNetwork,
+  transferBtcToSbtc: transferBtcToSbtc,
+  btcToSatoshi: btcToSatoshi,
+  signTx: signTx,
+  getUTXOsByAddress: getUTXOsByAddress
+};
