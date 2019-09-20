@@ -1,34 +1,16 @@
-#!/usr/bin/env node
-var wallet = require("./utils/wallet");
-var bitcoin = require("./utils/bitcoin");
-var CONFIG = require("./config.json");
+const { networks } = require("bitcoinjs-lib");
+const testnet = networks.testnet.wif;
+const mainnet = networks.bitcoin.wif;
+const Wallet = require("./utils/wallet");
 
-var generateNewWallets = function(argh) {
-  var bitcoinPrivateKey = wallet.generateWifPrivateKey(CONFIG.isTestnet);
-  var rskPrivateKey = wallet.generateRskPrivateKey(bitcoinPrivateKey);
-  var publicKey = wallet.generatePublicKey(rskPrivateKey);
-  var bitcoinAddress = wallet.generateBitcoinAddress(publicKey, CONFIG.isTestnet);
-  var rskAddress = wallet.generateRSKAddress(publicKey);
-
-  result = {
-    "Public Key     ": publicKey.toString("hex"),
-    "BTC Private Key": bitcoinPrivateKey,
-    "BTC Address    ": bitcoinAddress,
-    "RSK Private Key": rskPrivateKey.toString("hex"),
-    "RSK Address    ": "0x" + rskAddress.toString("hex")
-  };
-
-  console.log(result);
-};
-
-var generateRSKAddressFromBTCPrivateKey = function(argh) {
-  var privateKey = argh.argv && argh.argv[0];
-  var rskAddress = wallet.generateRSKAddressFromBitcoinPrivateKey(privateKey);
-  if (privateKey == null || rskAddress == null) return;
-
-  result = {
-    "RSK Address": "0x" + rskAddress.toString("hex")
-  };
-
-  console.log(result);
-};
+let wallet = new Wallet(mainnet);
+/* wallet.privKey = Buffer.from("0829e8a1e7f48944d79ffc85e9344761629dbd8298508b9c6690775da018e5f3", "hex");
+wallet.wifPrivKey = "KwVaba6XJKTZCmsPAZaaV3dKXGpzdtEE3Neh1ehmLvidKfpyry3n"; */
+console.log(
+  wallet
+    .generateWifPrivateKey()
+    .generatePublicKey()
+    .generateRSKAddress()
+    .encryptBIP38("Nuclearis2019")
+    .toHex(["rskAddressFromPublicKey", "privKey", "publicKey"])
+);

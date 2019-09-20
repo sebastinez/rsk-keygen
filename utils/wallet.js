@@ -1,86 +1,54 @@
-var ecc = require("tiny-secp256k1");
-var crypto = require("crypto");
-var typeforce = require("typeforce");
-var payments = require("./bitcoinjs-payments");
-var ethereumjs = require("ethereumjs-util");
-var bitcoin = require("bitcoinjs-lib");
-var wif = require("wif");
+const ecc = require("tiny-secp256k1");
+const crypto = require("crypto");
+const ethereumjs = require("ethereumjs-util");
+const wif = require("wif");
+const bip38 = require("bip38");
 
-var types = {
-  Buffer256bit: typeforce.BufferN(32)
-};
-
-var generatePrivateKey = function() {
-  var result;
-  do {
-    result = crypto.randomBytes(32);
-    typeforce(types.Buffer256bit, result);
-  } while (!ecc.isPrivate(result));
-
-  return result;
-};
-
-var generateWifPrivateKey = function(isTesnet) {
-  var privateKey = generatePrivateKey();
-  var network = isTesnet ? bitcoin.networks.testnet.wif : bitcoin.networks.bitcoin.wif;
-  return wif.encode(network, privateKey, true);
-};
-
-var privateKeyFromWif = function(privateKey) {
-  return wif.decode(privateKey).privateKey;
-};
-
-var generatePublicKey = function(privateKey) {
-  if (privateKey == null) {
-    console.error("Must specify a privateKey");
-    return;
+class Wallet {
+  constructor(_network) {
+    this.network = _network;
   }
-
-  if (ecc.isPrivate(privateKey)) {
-    var publicKey = ecc.pointFromScalar(privateKey, true);
-    return publicKey;
+  encryptBIP38(passphrase) {
+    this.encryptedKey = bip38.encrypt(this.privKey, this.publicKey, passphrase);
+    return this;
   }
-};
+  generatePrivateKey() {
+    do {
+      this.privKey = crypto.randomBytes(32);
+    } while (!ecc.isPrivate(this.privKey));
 
-var generateBitcoinAddress = function(publicKey, isTesnet) {
-  if (publicKey == null) {
-    console.error("Must specify a publicKey");
-    return;
+    return this;
   }
-
-  var network = isTesnet ? bitcoin.networks.testnet : bitcoin.networks.bitcoin;
-  var addressPayments = payments.p2pkh({ pubkey: publicKey, network: network });
-
-  return addressPayments.address;
-};
-
-var generateRSKAddressFromBitcoinPrivateKey = function(privateKey) {
-  if (privateKey == null) {
-    console.error("Must specify a privateKey");
-    return;
+  generateWifPrivateKey() {
+    this.generatePrivateKey();
+    this.wifPrivKey = wif.encode(this.network, this.privKey, true);
+    return this;
   }
+  generatePublicKey() {
+    if (this.privKey == null) {
+      console.error("Must specify a privateKey");
+      return;
+    }
 
-  return ethereumjs.privateToAddress(wif.decode(privateKey).privateKey);
-};
-
-var generateRSKAddress = function(publicKey) {
-  if (publicKey == null) {
-    console.error("Must specify a publicKey");
-    return;
+    if (ecc.isPrivate(this.privKey)) {
+      this.publicKey = ecc.pointFromScalar(this.privKey, true);
+      return this;
+    }
   }
+  generateRSKAddress() {
+    if (this.publicKey == null) {
+      console.error("Must specify a publicKey");
+      return;
+    }
+    this.rskAddressFromPublicKey = ethereumjs.pubToAddress(this.publicKey, true);
+    return this;
+  }
+  toHex(fields) {
+    fields.forEach(element => {
+      this[element] = this[element].toString("hex");
+    });
+    return this;
+  }
+}
 
-  return ethereumjs.pubToAddress(publicKey, true);
-};
-
-var generateRskPrivateKey = function(btcPrivateKey) {
-  return privateKeyFromWif(btcPrivateKey);
-};
-
-module.exports = {
-  generateWifPrivateKey: generateWifPrivateKey,
-  generatePublicKey: generatePublicKey,
-  generateBitcoinAddress: generateBitcoinAddress,
-  generateRSKAddress: generateRSKAddress,
-  generateRSKAddressFromBitcoinPrivateKey: generateRSKAddressFromBitcoinPrivateKey,
-  generateRskPrivateKey: generateRskPrivateKey
-};
+module.exports = Wallet;

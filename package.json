@@ -1,23 +1,21 @@
 {
-  "name": "proxy-wallet-lib",
+  "name": "rsk-keygen",
   "version": "1.0.0",
-  "description": "RSK Proxy Wallet - Peg process LIB",
+  "description": "RSK Keypair Generator",
   "main": "lib.js",
   "scripts": {
     "test": "mocha"
   },
-  "author": "RSK Ecosystem",
+  "author": "Sebastinez",
   "license": "MIT",
   "dependencies": {
-    "argh": "0.1.4",
-    "bitcoin": "latest",
+    "bip38": "^3.0.0",
     "bitcoinjs-lib": "3.3.2",
+    "bs58": "3.0.0",
+    "ethereumjs-util": "5.2.0",
     "mocha": "5.2.0",
     "tiny-secp256k1": "0.1.0",
-    "typeforce": "1.11.3",
-    "ethereumjs-util": "5.2.0",
-    "wif": "2.0.1",
-    "bs58": "3.0.0"
+    "wif": "2.0.1"
   },
   "devDependencies": {}
 }
