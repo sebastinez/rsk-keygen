@@ -1,8 +1,8 @@
-const ecc = require('tiny-secp256k1');
-const crypto = require('crypto');
-const ethereumjs = require('ethereumjs-util');
-const wif = require('wif');
-const bip38 = require('bip38');
+const ecc = require("tiny-secp256k1");
+const crypto = require("crypto");
+const ethereumjs = require("ethereumjs-util");
+const wif = require("wif");
+const bip38 = require("bip38");
 
 class Wallet {
   constructor(_network) {
@@ -19,7 +19,7 @@ class Wallet {
     return this;
   }
   decryptBIP38(passphrase) {
-    let key = bip38.decrypt(this.encryptedKey, passphrase, status => {});
+    let key = bip38.decrypt(this.encryptedKey, passphrase, (status) => {});
     this.decryptedKey = wif.encode(0x80, key.privateKey, key.compressed);
     return this;
   }
@@ -37,7 +37,7 @@ class Wallet {
   }
   generatePublicKey() {
     if (this.privKey == null) {
-      console.error('Must specify a privateKey');
+      console.error("Must specify a privateKey");
       return;
     }
 
@@ -48,18 +48,18 @@ class Wallet {
   }
   generateRSKAddress() {
     if (this.publicKey == null) {
-      console.error('Must specify a publicKey');
+      console.error("Must specify a publicKey");
       return;
     }
     this.rskAddressFromPublicKey = ethereumjs.pubToAddress(
-      this.publicKey,
+      Buffer.from(this.publicKey),
       true
     );
     return this;
   }
   toHex(fields) {
-    fields.forEach(element => {
-      this[element] = this[element].toString('hex');
+    fields.forEach((element) => {
+      this[element] = this[element].toString("hex");
     });
     return this;
   }
